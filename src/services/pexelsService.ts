@@ -124,7 +124,11 @@ class PexelsService {
       }
       
       const searchQuery = allKeywords.join(' ');
-      const url = new URL(`${PEXELS_API_URL}/search`);
+      
+      // Utiliser notre proxy Vercel pour contourner les restrictions CORS
+      const url = new URL('/api/fetch');
+      url.searchParams.set('url', `${PEXELS_API_URL}/search`);
+      url.searchParams.set('apiKey', PEXELS_API_KEY);
       
       // Paramètres de recherche
       url.searchParams.set('query', searchQuery);
@@ -147,10 +151,10 @@ class PexelsService {
       console.log(`🎯 Final keywords:`, allKeywords);
 
       console.log(`🌐 Making API request to: ${url.toString()}`);
-      console.log(`🔑 Headers:`, this.getHeaders());
+      console.log(`🔑 Using CORS proxy`);
       
       const response = await fetch(url.toString(), {
-        headers: this.getHeaders()
+        headers: {}
       });
 
       this.requestCount++;

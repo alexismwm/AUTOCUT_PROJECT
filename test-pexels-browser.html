@@ -97,7 +97,7 @@
                 
                 const data = await response.json();
                 
-                const result = `✅ Succès!\n\n📊 ${data.videos.length} vidéos trouvées\n\n`;
+                let result = `✅ Succès!\n\n📊 ${data.videos.length} vidéos trouvées\n\n`;
                 const firstVideo = data.videos[0];
                 if (firstVideo) {
                     result += `📹 Première vidéo:\n- ID: ${firstVideo.id}\n- Auteur: ${firstVideo.user.name}\n- Durée: ${firstVideo.duration}s\n- URL: ${firstVideo.video_files[0]?.link || 'Aucune'}\n`;
@@ -126,7 +126,7 @@
                 
                 const data = await response.json();
                 
-                const result = `✅ Succès!\n\n📊 ${data.videos.length} vidéos trouvées pour "paris travel"\n\n`;
+                let result = `✅ Succès!\n\n📊 ${data.videos.length} vidéos trouvées pour "paris travel"\n\n`;
                 const firstVideo = data.videos[0];
                 if (firstVideo) {
                     result += `📹 Première vidéo:\n- ID: ${firstVideo.id}\n- Auteur: ${firstVideo.user.name}\n- Durée: ${firstVideo.duration}s\n- Tags: ${firstVideo.tags.join(', ') || 'Aucun'}\n`;
