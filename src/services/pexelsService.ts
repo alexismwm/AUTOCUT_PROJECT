@@ -124,7 +124,18 @@ class PexelsService {
       }
       
       const searchQuery = allKeywords.join(' ');
-      const url = new URL(`${PEXELS_API_URL}/search`);
+      
+      // Utiliser le proxy en production pour éviter les problèmes CORS
+      const isProduction = window.location.hostname !== 'localhost';
+      const baseUrl = isProduction ? '/api/fetch' : `${PEXELS_API_URL}/search`;
+      
+      const url = new URL(baseUrl);
+      
+      if (isProduction) {
+        // Proxy mode
+        url.searchParams.set('url', `${PEXELS_API_URL}/search`);
+        url.searchParams.set('apiKey', PEXELS_API_KEY);
+      }
       
       // Paramètres de recherche
       url.searchParams.set('query', searchQuery);
@@ -146,13 +157,22 @@ class PexelsService {
       console.log(`🎯 Theme keywords:`, this.getThemeKeywords(params.theme));
       console.log(`🎯 Final keywords:`, allKeywords);
 
+      console.log(`🌐 Making API request to: ${url.toString()}`);
+      console.log(`🔑 Production mode: ${isProduction}`);
+      
       const response = await fetch(url.toString(), {
-        headers: this.getHeaders()
+        headers: isProduction ? {} : this.getHeaders()
       });
 
       this.requestCount++;
 
+      console.log(`📡 Response status: ${response.status} ${response.statusText}`);
+      console.log(`📡 Response headers:`, Object.fromEntries(response.headers.entries()));
+
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`❌ API Error: ${response.status} - ${errorText}`);
+        
         if (response.status === 429) {
           throw new VideoServiceError(
             'Too many requests. Please wait before trying again.',
@@ -160,7 +180,7 @@ class PexelsService {
           );
         }
         throw new VideoServiceError(
-          `API request failed: ${response.status}`,
+          `API request failed: ${response.status} - ${errorText}`,
           'API_ERROR'
         );
       }

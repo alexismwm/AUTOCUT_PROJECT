@@ -17,6 +17,41 @@ export default async function handler(req: Request): Promise<Response> {
       return new Response('Invalid protocol', { status: 400 });
     }
 
+    // Special handling for Pexels API
+    if (parsed.hostname === 'api.pexels.com') {
+      const pexelsUrl = new URL(parsed.pathname + parsed.search, 'https://api.pexels.com');
+      const apiKey = searchParams.get('apiKey');
+      
+      if (!apiKey) {
+        return new Response('Missing API key for Pexels', { status: 400 });
+      }
+
+      const upstream = await fetch(pexelsUrl.toString(), {
+        headers: {
+          'Authorization': apiKey,
+          'Content-Type': 'application/json',
+          'User-Agent': 'Mozilla/5.0 (compatible; SnapcutProxy/1.0; +https://vercel.app)'
+        }
+      });
+
+      if (!upstream.ok) {
+        const errorText = await upstream.text();
+        return new Response(`Pexels API error: ${upstream.status} - ${errorText}`, { 
+          status: upstream.status 
+        });
+      }
+
+      const data = await upstream.json();
+      return new Response(JSON.stringify(data), {
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'public, max-age=300',
+          'Cross-Origin-Resource-Policy': 'cross-origin'
+        }
+      });
+    }
+
+    // Regular proxy for other URLs
     const upstream = await fetch(url, {
       // Some CDNs block unknown UA; set a common UA and Accept for images/videos
       headers: {
