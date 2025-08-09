@@ -3,6 +3,7 @@ import { Shuffle, Search, Download, X, RefreshCw, Filter, User } from 'lucide-re
 import { VideoTheme, VideoAsset } from '../types/video';
 import { pexelsService } from '../services/pexelsService';
 import { FileNamingService } from '../services/fileNamingService';
+import { VideoDebug } from './VideoDebug';
 
 interface PexelsVideoManagerProps {
   cutMarkers: any[];
@@ -43,6 +44,7 @@ export const PexelsVideoManager: React.FC<PexelsVideoManagerProps> = ({
   const [selectedAuthor, setSelectedAuthor] = useState<string>('');
   const [minDuration, setMinDuration] = useState<number>(0);
   const [maxDuration, setMaxDuration] = useState<number>(60);
+  const [debugVideo, setDebugVideo] = useState<VideoAsset | null>(null);
 
   // Calcul du nombre de plans
   const totalPlans = cutMarkers.length + 1;
@@ -513,6 +515,16 @@ export const PexelsVideoManager: React.FC<PexelsVideoManagerProps> = ({
                         </button>
                       ))}
                     </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDebugVideo(video);
+                      }}
+                      className="mt-2 px-2 py-1 bg-purple-600 hover:bg-purple-700 text-white text-xs rounded transition-colors"
+                      title="Debug video"
+                    >
+                      🔍 Debug
+                    </button>
                   </div>
                 </div>
               </div>
@@ -592,6 +604,14 @@ export const PexelsVideoManager: React.FC<PexelsVideoManagerProps> = ({
             ))}
           </div>
         </div>
+      )}
+
+      {/* Video Debug Modal */}
+      {debugVideo && (
+        <VideoDebug
+          video={debugVideo}
+          onClose={() => setDebugVideo(null)}
+        />
       )}
     </div>
   );

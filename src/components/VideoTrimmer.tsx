@@ -161,24 +161,31 @@ export const VideoTrimmer: React.FC<VideoTrimmerProps> = ({
     handleSeek(clickTime);
   }, [isVideoLoaded, handleSeek]);
 
-  const handleMouseDown = useCallback(() => {
-    setIsDragging('start'); // We only move the whole zone now
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsDragging('start');
+    console.log('🎯 Mouse down - starting drag');
   }, []);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (!isDragging || !timelineRef.current || !videoRef.current) return;
 
+    e.preventDefault();
     const rect = timelineRef.current.getBoundingClientRect();
     const moveX = e.clientX - rect.left;
     const percentage = Math.max(0, Math.min(1, moveX / rect.width));
     const newTime = percentage * videoRef.current.duration;
 
+    console.log(`🎯 Mouse move - new time: ${newTime.toFixed(1)}s`);
     handleZoneMove(newTime);
   }, [isDragging, handleZoneMove]);
 
   const handleMouseUp = useCallback(() => {
+    if (isDragging) {
+      console.log('🎯 Mouse up - ending drag');
+    }
     setIsDragging(null);
-  }, []);
+  }, [isDragging]);
 
   const handleApplyTrim = useCallback(() => {
     onTrimChange(planIndex, startTime, endTime);
@@ -256,6 +263,24 @@ export const VideoTrimmer: React.FC<VideoTrimmerProps> = ({
               className="w-full h-full object-cover"
               crossOrigin="anonymous"
               playsInline
+              preload="metadata"
+              onError={(e) => {
+                console.error('❌ Video loading error:', e);
+                // Try to extract original URL from proxy
+                try {
+                  const src = (e.currentTarget as HTMLVideoElement).src;
+                  if (src.includes('/api/fetch?url=')) {
+                    const url = new URL(src);
+                    const originalUrl = url.searchParams.get('url');
+                    if (originalUrl) {
+                      console.log('🔄 Trying original URL:', originalUrl);
+                      (e.currentTarget as HTMLVideoElement).src = originalUrl;
+                    }
+                  }
+                } catch (error) {
+                  console.error('❌ Failed to extract original URL:', error);
+                }
+              }}
             />
             
             {/* Video Controls Overlay */}
@@ -299,16 +324,23 @@ export const VideoTrimmer: React.FC<VideoTrimmerProps> = ({
 
               {/* Zone handle - Single draggable zone */}
               <div
-                className="absolute top-0 w-full h-full cursor-grab active:cursor-grabbing hover:bg-green-500/10 transition-colors flex items-center justify-center"
+                className={`absolute top-0 w-full h-full transition-colors flex items-center justify-center ${
+                  isDragging 
+                    ? 'cursor-grabbing bg-green-500/20' 
+                    : 'cursor-grab hover:bg-green-500/10'
+                }`}
                 style={{ 
                   left: `${startPercent}%`, 
                   width: `${Math.min(zoneWidthPercent, 100 - startPercent)}%`
                 }}
                 onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
                 title={`Drag to move zone (${fixedZoneDuration.toFixed(1)}s)`}
               >
                 <div className="text-white text-xs font-bold bg-green-500/80 px-2 py-1 rounded backdrop-blur">
-                  {fixedZoneDuration.toFixed(1)}s
+                  {isDragging ? '🎯 Dragging...' : `${fixedZoneDuration.toFixed(1)}s`}
                 </div>
               </div>
 

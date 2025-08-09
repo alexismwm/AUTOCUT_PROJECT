@@ -1,160 +1,235 @@
-import React, { useState, useEffect } from 'react';
-import { Monitor, Database, Wifi } from 'lucide-react';
-import { videoService } from '../services/videoService';
+import React, { useState, useRef, useEffect } from 'react';
+import { VideoAsset } from '../types/video';
 
-export const VideoDebug: React.FC = () => {
-  const [stats, setStats] = useState<any>(null);
-  const [isOpen, setIsOpen] = useState(false);
+interface VideoDebugProps {
+  video: VideoAsset;
+  onClose: () => void;
+}
+
+export const VideoDebug: React.FC<VideoDebugProps> = ({ video, onClose }) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [videoState, setVideoState] = useState({
+    loaded: false,
+    error: false,
+    duration: 0,
+    currentTime: 0,
+    readyState: 0,
+    networkState: 0,
+    errorMessage: ''
+  });
 
   useEffect(() => {
-    const updateStats = () => {
-      setStats(videoService.getStats());
+    const videoElement = videoRef.current;
+    if (!videoElement) return;
+
+    const handleLoadedMetadata = () => {
+      console.log('✅ Video metadata loaded:', {
+        duration: videoElement.duration,
+        readyState: videoElement.readyState,
+        networkState: videoElement.networkState
+      });
+      setVideoState(prev => ({
+        ...prev,
+        loaded: true,
+        duration: videoElement.duration,
+        readyState: videoElement.readyState,
+        networkState: videoElement.networkState
+      }));
     };
 
-    updateStats();
-    const interval = setInterval(updateStats, 5000); // Update every 5s
+    const handleTimeUpdate = () => {
+      setVideoState(prev => ({
+        ...prev,
+        currentTime: videoElement.currentTime
+      }));
+    };
 
-    return () => clearInterval(interval);
-  }, []);
+    const handleError = (e: Event) => {
+      console.error('❌ Video error:', e);
+      const error = videoElement.error;
+      let errorMessage = 'Unknown error';
+      
+      if (error) {
+        switch (error.code) {
+          case 1:
+            errorMessage = 'MEDIA_ERR_ABORTED - Loading aborted';
+            break;
+          case 2:
+            errorMessage = 'MEDIA_ERR_NETWORK - Network error';
+            break;
+          case 3:
+            errorMessage = 'MEDIA_ERR_DECODE - Decoding error';
+            break;
+          case 4:
+            errorMessage = 'MEDIA_ERR_SRC_NOT_SUPPORTED - Source not supported';
+            break;
+          default:
+            errorMessage = `Error code: ${error.code}`;
+        }
+      }
 
-  if (!stats) return null;
+      setVideoState(prev => ({
+        ...prev,
+        error: true,
+        errorMessage
+      }));
+    };
+
+    const handleCanPlay = () => {
+      console.log('🎬 Video can play');
+    };
+
+    const handleCanPlayThrough = () => {
+      console.log('🎬 Video can play through');
+    };
+
+    videoElement.addEventListener('loadedmetadata', handleLoadedMetadata);
+    videoElement.addEventListener('timeupdate', handleTimeUpdate);
+    videoElement.addEventListener('error', handleError);
+    videoElement.addEventListener('canplay', handleCanPlay);
+    videoElement.addEventListener('canplaythrough', handleCanPlayThrough);
+
+    // Load the video
+    videoElement.load();
+
+    return () => {
+      videoElement.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      videoElement.removeEventListener('timeupdate', handleTimeUpdate);
+      videoElement.removeEventListener('error', handleError);
+      videoElement.removeEventListener('canplay', handleCanPlay);
+      videoElement.removeEventListener('canplaythrough', handleCanPlayThrough);
+    };
+  }, [video]);
+
+  const testDirectUrl = () => {
+    if (videoRef.current) {
+      const originalUrl = video.videoUrl.replace('/api/fetch?url=', '');
+      console.log('🔄 Testing direct URL:', originalUrl);
+      videoRef.current.src = originalUrl;
+      setVideoState(prev => ({ ...prev, error: false, errorMessage: '' }));
+    }
+  };
+
+  const testProxyUrl = () => {
+    if (videoRef.current) {
+      console.log('🔄 Testing proxy URL:', video.videoUrl);
+      videoRef.current.src = video.videoUrl;
+      setVideoState(prev => ({ ...prev, error: false, errorMessage: '' }));
+    }
+  };
 
   return (
-    <div className="fixed bottom-4 right-4 z-50">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-12 h-12 bg-blue-600 hover:bg-blue-700 rounded-full flex items-center justify-center text-white shadow-lg transition-colors"
-        title="Video System Debug"
-      >
-        <Monitor className="w-5 h-5" />
-      </button>
-
-      {isOpen && (
-        <div className="absolute bottom-16 right-0 w-80 bg-slate-800 rounded-xl border border-slate-600 shadow-2xl p-4 text-sm">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-white flex items-center space-x-2">
-              <span>🎬</span>
-              <span>Video System</span>
-            </h3>
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-slate-800 rounded-2xl border border-slate-700 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        {/* Header */}
+        <div className="p-6 border-b border-slate-700">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-semibold text-white mb-1">
+                🔍 Video Debug - {video.title}
+              </h2>
+              <p className="text-sm text-slate-400">ID: {video.id}</p>
+            </div>
             <button
-              onClick={() => setIsOpen(false)}
-              className="text-slate-400 hover:text-white"
+              onClick={onClose}
+              className="text-slate-400 hover:text-white transition-colors text-xl hover:bg-slate-700 rounded-full w-8 h-8 flex items-center justify-center"
             >
               ✕
             </button>
           </div>
+        </div>
 
-          <div className="space-y-3">
-            {/* API Status */}
-            <div className="bg-slate-700/50 rounded-lg p-3">
-              <div className="flex items-center space-x-2 mb-2">
-                <Wifi className="w-4 h-4 text-blue-400" />
-                <span className="text-white font-medium">Pexels API</span>
-              </div>
-              <div className="space-y-1 text-xs">
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Status:</span>
-                  <span className={stats.api.hasApiKey ? 'text-green-400' : 'text-orange-400'}>
-                    {stats.api.hasApiKey ? '✅ Connected' : '⚠️ Mock Mode'}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Requests/Hour:</span>
-                  <span className="text-white">
-                    {stats.api.requestsThisHour}/{stats.api.maxRequestsPerHour}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Reset in:</span>
-                  <span className="text-white">
-                    {Math.round(stats.api.timeUntilReset)}min
-                  </span>
-                </div>
+        {/* Video Info */}
+        <div className="p-6 space-y-4">
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <h3 className="font-semibold text-white mb-2">Video Properties</h3>
+              <div className="space-y-1 text-slate-300">
+                <div>Duration: {video.duration}s</div>
+                <div>Resolution: {video.width}x{video.height}</div>
+                <div>Theme: {video.theme}</div>
+                <div>Author: {video.author.name}</div>
               </div>
             </div>
-
-            {/* Cache Status */}
-            <div className="bg-slate-700/50 rounded-lg p-3">
-              <div className="flex items-center space-x-2 mb-2">
-                <Database className="w-4 h-4 text-green-400" />
-                <span className="text-white font-medium">Cache</span>
+            <div>
+              <h3 className="font-semibold text-white mb-2">Video State</h3>
+              <div className="space-y-1 text-slate-300">
+                <div>Loaded: {videoState.loaded ? '✅' : '❌'}</div>
+                <div>Error: {videoState.error ? '❌' : '✅'}</div>
+                <div>Duration: {videoState.duration.toFixed(1)}s</div>
+                <div>Current Time: {videoState.currentTime.toFixed(1)}s</div>
+                <div>Ready State: {videoState.readyState}</div>
+                <div>Network State: {videoState.networkState}</div>
               </div>
-              <div className="space-y-1 text-xs">
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Memory:</span>
-                  <span className="text-white">{stats.cache.memory.totalVideos} videos</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Storage:</span>
-                  <span className="text-white">
-                    {stats.cache.storage.totalVideos} videos ({stats.cache.storage.sizeKB}KB)
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Themes:</span>
-                  <span className="text-white">{stats.availableThemes.length}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Available Themes */}
-            <div className="bg-slate-700/50 rounded-lg p-3">
-              <div className="text-white font-medium mb-2">Cached Themes</div>
-              <div className="flex flex-wrap gap-1">
-                {stats.availableThemes.length > 0 ? (
-                  stats.availableThemes.map((theme: string) => (
-                    <span
-                      key={theme}
-                      className="px-2 py-1 bg-blue-600/20 text-blue-300 rounded text-xs"
-                    >
-                      {theme}
-                    </span>
-                  ))
-                ) : (
-                  <span className="text-slate-400 text-xs">None cached yet</span>
-                )}
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex space-x-2 pt-2 border-t border-slate-600">
-              <button
-                onClick={() => {
-                  videoService.clearCache();
-                  setStats(videoService.getStats());
-                }}
-                className="flex-1 px-3 py-2 bg-red-600/20 text-red-300 rounded-lg text-xs hover:bg-red-600/30 transition-colors"
-              >
-                Clear Cache
-              </button>
-              <button
-                onClick={() => {
-                  videoService.preloadPopularThemes();
-                }}
-                className="flex-1 px-3 py-2 bg-blue-600/20 text-blue-300 rounded-lg text-xs hover:bg-blue-600/30 transition-colors"
-              >
-                Preload
-              </button>
-            </div>
-            
-            {/* Video Shuffle */}
-            <div className="pt-2 border-t border-slate-600">
-              <button
-                onClick={() => {
-                  import('../services/planVideoAssigner').then(({ planVideoAssigner }) => {
-                    planVideoAssigner.shuffleAssignments();
-                    console.log('🎲 Videos shuffled! Check the preview panel.');
-                  });
-                }}
-                className="w-full px-3 py-2 bg-purple-600/20 text-purple-300 rounded-lg text-xs hover:bg-purple-600/30 transition-colors flex items-center justify-center space-x-2"
-              >
-                <span>🎲</span>
-                <span>Shuffle Videos</span>
-              </button>
             </div>
           </div>
+
+          {videoState.error && (
+            <div className="bg-red-900/20 border border-red-500 rounded-lg p-4">
+              <h3 className="font-semibold text-red-400 mb-2">❌ Error</h3>
+              <p className="text-red-300">{videoState.errorMessage}</p>
+            </div>
+          )}
+
+          {/* URLs */}
+          <div>
+            <h3 className="font-semibold text-white mb-2">URLs</h3>
+            <div className="space-y-2">
+              <div>
+                <label className="block text-xs text-slate-400 mb-1">Proxy URL:</label>
+                <div className="bg-slate-700 rounded p-2 text-xs font-mono text-slate-300 break-all">
+                  {video.videoUrl}
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs text-slate-400 mb-1">Direct URL:</label>
+                <div className="bg-slate-700 rounded p-2 text-xs font-mono text-slate-300 break-all">
+                  {video.videoUrl.replace('/api/fetch?url=', '')}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Test Buttons */}
+          <div className="flex space-x-4">
+            <button
+              onClick={testProxyUrl}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white text-sm"
+            >
+              Test Proxy URL
+            </button>
+            <button
+              onClick={testDirectUrl}
+              className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-white text-sm"
+            >
+              Test Direct URL
+            </button>
+          </div>
         </div>
-      )}
+
+        {/* Video Preview */}
+        <div className="p-6">
+          <div className="relative aspect-[9/16] max-h-96 mx-auto bg-black rounded-xl overflow-hidden">
+            <video
+              ref={videoRef}
+              className="w-full h-full object-cover"
+              crossOrigin="anonymous"
+              playsInline
+              controls
+            />
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="p-6 border-t border-slate-700">
+          <button
+            onClick={onClose}
+            className="w-full px-6 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-white transition-colors"
+          >
+            Close Debug
+          </button>
+        </div>
+      </div>
     </div>
   );
 }; 
