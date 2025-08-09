@@ -7,7 +7,7 @@ import { PreviewPanel } from './components/PreviewPanel';
 import { ExportPanel } from './components/ExportPanel';
 import { RandomModeDialog } from './components/RandomModeDialog';
 import { ThemeSelector } from './components/ThemeSelector';
-import { VideoDebug } from './components/VideoDebug';
+
 
 import { MasterExportPanel } from './components/MasterExportPanel';
 import { PexelsVideoManager } from './components/PexelsVideoManager';
@@ -444,8 +444,7 @@ function App() {
         existingCutsCount={cutMarkers.length}
       />
 
-      {/* Video Debug Panel (development only) */}
-      <VideoDebug />
+      {/* Video Debug Panel is now integrated in PexelsVideoManager */}
     </div>
   );
 }
