@@ -440,6 +440,15 @@ export const PexelsVideoManager: React.FC<PexelsVideoManagerProps> = ({
                     alt={video.title}
                     crossOrigin="anonymous"
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      // If proxied URL fails, try to extract original from query param
+                      try {
+                        const src = (e.currentTarget as HTMLImageElement).src;
+                        const url = new URL(src);
+                        const original = url.searchParams.get('url');
+                        if (original) (e.currentTarget as HTMLImageElement).src = original;
+                      } catch {}
+                    }}
                   />
                 </div>
                 <div className="p-2">
@@ -529,6 +538,14 @@ export const PexelsVideoManager: React.FC<PexelsVideoManagerProps> = ({
                     alt={video.title}
                     crossOrigin="anonymous"
                     className="w-12 h-8 object-cover rounded"
+                    onError={(e) => {
+                      try {
+                        const src = (e.currentTarget as HTMLImageElement).src;
+                        const url = new URL(src);
+                        const original = url.searchParams.get('url');
+                        if (original) (e.currentTarget as HTMLImageElement).src = original;
+                      } catch {}
+                    }}
                   />
                   <div>
                     <div className="text-sm text-white font-medium truncate max-w-[200px]">
