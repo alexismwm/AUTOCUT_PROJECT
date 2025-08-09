@@ -352,7 +352,7 @@ class PexelsService {
         id: `mock-${theme}-${i}-${Date.now()}`, // Add timestamp for uniqueness
         title: title,
         thumbnail: `https://picsum.photos/400/300?random=${theme}${i}${Date.now()}`, // Direct URL for thumbnails
-        videoUrl: proxy(videos[videoIndex]),
+        videoUrl: videos[videoIndex], // Direct URL for demo videos
         duration: Math.round(duration * 10) / 10, // Round to 1 decimal
         width: 1920,
         height: 1080,
