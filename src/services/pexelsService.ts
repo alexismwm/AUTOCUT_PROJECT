@@ -9,7 +9,7 @@ import {
 
 // Configuration de l'API Pexels
 const PEXELS_API_URL = 'https://api.pexels.com/videos';
-const PEXELS_API_KEY = import.meta.env.VITE_PEXELS_API_KEY || '';
+const PEXELS_API_KEY = import.meta.env.VITE_PEXELS_API_KEY || import.meta.env.PEXELS_API_KEY || '';
 
 // Helper: proxy same-origin via Edge function to comply with COEP require-corp
 function proxy(url: string): string {
@@ -97,6 +97,7 @@ class PexelsService {
   async searchVideosByTheme(params: VideoSearchParams, customKeywords?: string[]): Promise<VideoAsset[]> {
     if (!PEXELS_API_KEY) {
       console.warn('🔑 Pexels API key not found. Using mock data.');
+      console.log('💡 To use real Pexels videos, add VITE_PEXELS_API_KEY to your .env file');
       return this.getMockVideos(params.theme);
     }
 
@@ -130,6 +131,9 @@ class PexelsService {
         url.searchParams.set('size', params.size);
       }
 
+      console.log(`🔍 Searching Pexels for: "${searchQuery}"`);
+      console.log(`📡 API URL: ${url.toString()}`);
+
       const response = await fetch(url.toString(), {
         headers: this.getHeaders()
       });
@@ -150,6 +154,8 @@ class PexelsService {
       }
 
       const data: PexelsResponse = await response.json();
+      
+      console.log(`📊 Pexels API Response: ${data.videos?.length || 0} videos found`);
       
       const videos = data.videos
         .filter(video => {
@@ -173,11 +179,8 @@ class PexelsService {
       }
       
       console.error('Pexels API error:', error);
-      throw new VideoServiceError(
-        'Failed to fetch videos from Pexels',
-        'NETWORK_ERROR',
-        error as Error
-      );
+      console.log('🔄 Falling back to mock data due to API error');
+      return this.getMockVideos(params.theme);
     }
   }
 
@@ -272,57 +275,57 @@ class PexelsService {
       'William Anderson', 'Patricia Thomas', 'Richard Jackson', 'Linda White', 'Thomas Harris'
     ];
 
-    // Theme-specific video URLs for variety
+    // Theme-specific video URLs for variety - Using working demo videos
     const themeVideos = {
       'Travel': [
-        'https://player.vimeo.com/external/291648067.hd.mp4?s=94998971682c6a3267e4cbd19d16a7b6c720f345&profile_id=175',
-        'https://player.vimeo.com/external/328328847.hd.mp4?s=c44e19f5a3d15f067c02d8c03c459c1e6a2e7f8a&profile_id=175',
-        'https://player.vimeo.com/external/434045526.hd.mp4?s=c27eecc69a27dbc4ff2b87d38afc35f1a9e7c02d&profile_id=175'
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'
       ],
       'Lifestyle': [
-        'https://player.vimeo.com/external/434045526.hd.mp4?s=c27eecc69a27dbc4ff2b87d38afc35f1a9e7c02d&profile_id=175',
-        'https://player.vimeo.com/external/328328847.hd.mp4?s=c44e19f5a3d15f067c02d8c03c459c1e6a2e7f8a&profile_id=175',
-        'https://player.vimeo.com/external/291648067.hd.mp4?s=94998971682c6a3267e4cbd19d16a7b6c720f345&profile_id=175'
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4'
       ],
       'Fashion': [
-        'https://player.vimeo.com/external/328328847.hd.mp4?s=c44e19f5a3d15f067c02d8c03c459c1e6a2e7f8a&profile_id=175',
-        'https://player.vimeo.com/external/434045526.hd.mp4?s=c27eecc69a27dbc4ff2b87d38afc35f1a9e7c02d&profile_id=175',
-        'https://player.vimeo.com/external/291648067.hd.mp4?s=94998971682c6a3267e4cbd19d16a7b6c720f345&profile_id=175'
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMob.mp4',
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'
       ],
       'Retro': [
-        'https://player.vimeo.com/external/434045526.hd.mp4?s=c27eecc69a27dbc4ff2b87d38afc35f1a9e7c02d&profile_id=175',
-        'https://player.vimeo.com/external/291648067.hd.mp4?s=94998971682c6a3267e4cbd19d16a7b6c720f345&profile_id=175',
-        'https://player.vimeo.com/external/328328847.hd.mp4?s=c44e19f5a3d15f067c02d8c03c459c1e6a2e7f8a&profile_id=175'
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4'
       ],
       'Party': [
-        'https://player.vimeo.com/external/291648067.hd.mp4?s=94998971682c6a3267e4cbd19d16a7b6c720f345&profile_id=175',
-        'https://player.vimeo.com/external/434045526.hd.mp4?s=c27eecc69a27dbc4ff2b87d38afc35f1a9e7c02d&profile_id=175',
-        'https://player.vimeo.com/external/328328847.hd.mp4?s=c44e19f5a3d15f067c02d8c03c459c1e6a2e7f8a&profile_id=175'
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMob.mp4',
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'
       ],
       'Sport': [
-        'https://player.vimeo.com/external/328328847.hd.mp4?s=c44e19f5a3d15f067c02d8c03c459c1e6a2e7f8a&profile_id=175',
-        'https://player.vimeo.com/external/291648067.hd.mp4?s=94998971682c6a3267e4cbd19d16a7b6c720f345&profile_id=175',
-        'https://player.vimeo.com/external/434045526.hd.mp4?s=c27eecc69a27dbc4ff2b87d38afc35f1a9e7c02d&profile_id=175'
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4'
       ],
       'Games': [
-        'https://player.vimeo.com/external/434045526.hd.mp4?s=c27eecc69a27dbc4ff2b87d38afc35f1a9e7c02d&profile_id=175',
-        'https://player.vimeo.com/external/328328847.hd.mp4?s=c44e19f5a3d15f067c02d8c03c459c1e6a2e7f8a&profile_id=175',
-        'https://player.vimeo.com/external/291648067.hd.mp4?s=94998971682c6a3267e4cbd19d16a7b6c720f345&profile_id=175'
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMob.mp4',
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'
       ],
       'Food': [
-        'https://player.vimeo.com/external/291648067.hd.mp4?s=94998971682c6a3267e4cbd19d16a7b6c720f345&profile_id=175',
-        'https://player.vimeo.com/external/434045526.hd.mp4?s=c27eecc69a27dbc4ff2b87d38afc35f1a9e7c02d&profile_id=175',
-        'https://player.vimeo.com/external/328328847.hd.mp4?s=c44e19f5a3d15f067c02d8c03c459c1e6a2e7f8a&profile_id=175'
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4'
       ],
       'Vlog': [
-        'https://player.vimeo.com/external/328328847.hd.mp4?s=c44e19f5a3d15f067c02d8c03c459c1e6a2e7f8a&profile_id=175',
-        'https://player.vimeo.com/external/291648067.hd.mp4?s=94998971682c6a3267e4cbd19d16a7b6c720f345&profile_id=175',
-        'https://player.vimeo.com/external/434045526.hd.mp4?s=c27eecc69a27dbc4ff2b87d38afc35f1a9e7c02d&profile_id=175'
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMob.mp4',
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'
       ],
       'social': [
-        'https://player.vimeo.com/external/434045526.hd.mp4?s=c27eecc69a27dbc4ff2b87d38afc35f1a9e7c02d&profile_id=175',
-        'https://player.vimeo.com/external/291648067.hd.mp4?s=94998971682c6a3267e4cbd19d16a7b6c720f345&profile_id=175',
-        'https://player.vimeo.com/external/328328847.hd.mp4?s=c44e19f5a3d15f067c02d8c03c459c1e6a2e7f8a&profile_id=175'
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4'
       ]
     };
 
@@ -336,7 +339,7 @@ class PexelsService {
       return {
         id: `mock-${theme}-${i}-${Date.now()}`, // Add timestamp for uniqueness
         title: `${theme} video ${i + 1}`,
-        thumbnail: proxy(`https://picsum.photos/400/300?random=${theme}${i}${Date.now()}`), // Add timestamp for variety
+        thumbnail: `https://picsum.photos/400/300?random=${theme}${i}${Date.now()}`, // Direct URL for thumbnails
         videoUrl: proxy(videos[videoIndex]),
         duration: Math.round(duration * 10) / 10, // Round to 1 decimal
         width: 1920,
