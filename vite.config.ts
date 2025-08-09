@@ -14,6 +14,9 @@ export default defineConfig({
   build: {
     // Enable source maps for debugging
     sourcemap: true,
+
+    // Target modern browsers to support async/await and dynamic import well
+    target: ['es2022', 'chrome100', 'safari15'],
     
     // Optimize chunks
     rollupOptions: {

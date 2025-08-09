@@ -49,19 +49,21 @@
     
     <!-- Minimal ffmpeg.wasm CDN test (non intrusif) -->
     <script type="module">
-      try {
-        console.log('crossOriginIsolated =', self.crossOriginIsolated);
-        // Lazy import to avoid impacting app load
-        const { FFmpeg } = await import('https://esm.sh/@ffmpeg/ffmpeg@0.12.8');
-        const { fetchFile } = await import('https://esm.sh/@ffmpeg/util@0.12.2');
-        const ffmpeg = new FFmpeg();
-        await ffmpeg.load();
-        console.log('✅ ffmpeg.wasm loaded (CDN test)');
-        // Optionnel: test léger d'E/S en mémoire
-        await ffmpeg.writeFile('noop.txt', await fetchFile(new Blob(['ok'])));
-      } catch (e) {
-        console.warn('⚠️ ffmpeg.wasm CDN test failed:', e);
-      }
+      (async () => {
+        try {
+          console.log('crossOriginIsolated =', self.crossOriginIsolated);
+          // Lazy import to avoid impacting app load
+          const { FFmpeg } = await import('https://esm.sh/@ffmpeg/ffmpeg@0.12.8');
+          const { fetchFile } = await import('https://esm.sh/@ffmpeg/util@0.12.2');
+          const ffmpeg = new FFmpeg();
+          await ffmpeg.load();
+          console.log('✅ ffmpeg.wasm loaded (CDN test)');
+          // Optionnel: test léger d'E/S en mémoire
+          await ffmpeg.writeFile('noop.txt', await fetchFile(new Blob(['ok'])));
+        } catch (e) {
+          console.warn('⚠️ ffmpeg.wasm CDN test failed:', e);
+        }
+      })();
     </script>
     
     <!-- Fallback for users with JavaScript disabled -->
