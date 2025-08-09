@@ -11,6 +11,15 @@ import {
 const PEXELS_API_URL = 'https://api.pexels.com/videos';
 const PEXELS_API_KEY = import.meta.env.VITE_PEXELS_API_KEY || '';
 
+// Helper: proxy same-origin via Edge function to comply with COEP require-corp
+function proxy(url: string): string {
+  try {
+    return `/api/fetch?url=${encodeURIComponent(url)}`;
+  } catch {
+    return url;
+  }
+}
+
 // Limites de l'API (version gratuite)
 const API_LIMITS = {
   requestsPerHour: 200,
@@ -62,13 +71,13 @@ class PexelsService {
       })[0];
 
     // Thumbnail (première image disponible)
-    const thumbnail = pexelsVideo.video_pictures[0]?.picture || pexelsVideo.image;
+    const rawThumbnail = pexelsVideo.video_pictures[0]?.picture || pexelsVideo.image;
 
     return {
       id: pexelsVideo.id.toString(),
       title: pexelsVideo.tags.slice(0, 3).join(' ') || 'Video',
-      thumbnail,
-      videoUrl: bestVideo?.link || '',
+      thumbnail: proxy(rawThumbnail),
+      videoUrl: bestVideo?.link ? proxy(bestVideo.link) : '',
       duration: pexelsVideo.duration,
       width: pexelsVideo.width,
       height: pexelsVideo.height,
@@ -259,8 +268,8 @@ class PexelsService {
     const mockData: VideoAsset[] = Array.from({ length: limit }, (_, i) => ({
       id: `mock-${theme}-${i}`,
       title: `${theme} video ${i + 1}`,
-      thumbnail: `https://picsum.photos/400/300?random=${theme}${i}`,
-      videoUrl: `https://player.vimeo.com/external/291648067.hd.mp4?s=94998971682c6a3267e4cbd19d16a7b6c720f345&profile_id=175`,
+      thumbnail: proxy(`https://picsum.photos/400/300?random=${theme}${i}`),
+      videoUrl: proxy(`https://player.vimeo.com/external/291648067.hd.mp4?s=94998971682c6a3267e4cbd19d16a7b6c720f345&profile_id=175`),
       duration: 15 + Math.random() * 30,
       width: 1920,
       height: 1080,

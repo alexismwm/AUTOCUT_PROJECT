@@ -211,7 +211,7 @@ export const PexelsVideoManager: React.FC<PexelsVideoManagerProps> = ({
         videoIndex++;
       }
       
-              console.log(`✅ ${videoAssignments.size} vidéos téléchargées avec le naming: ${projectFilename.replace('.json', '_project')}`);
+            console.log(`✅ ${videoAssignments.size} vidéos téléchargées avec le naming: ${projectFilename.replace('.json', '_project')}`);
     } catch (error) {
       console.error('Erreur lors du téléchargement:', error);
       alert('Erreur lors du téléchargement des vidéos.');
@@ -438,6 +438,7 @@ export const PexelsVideoManager: React.FC<PexelsVideoManagerProps> = ({
                   <img
                     src={video.thumbnail}
                     alt={video.title}
+                    crossOrigin="anonymous"
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -526,6 +527,7 @@ export const PexelsVideoManager: React.FC<PexelsVideoManagerProps> = ({
                   <img
                     src={video.thumbnail}
                     alt={video.title}
+                    crossOrigin="anonymous"
                     className="w-12 h-8 object-cover rounded"
                   />
                   <div>
