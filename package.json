@@ -13,10 +13,11 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "build:analyze": "vite build --mode analyze",
-    "deploy": "npm run build && echo 'Build completed! Ready for Netlify deployment.'",
+    "deploy:netlify": "npm run build && echo 'Build completed! Ready for Netlify deployment.'",
     "clean": "rm -rf dist",
     "commit": "./scripts/auto-commit.sh",
-    "push": "./scripts/auto-commit.sh"
+    "push": "./scripts/auto-commit.sh",
+    "deploy": "./scripts/deploy-vercel.sh"
   },
   "dependencies": {
     "@ffmpeg/ffmpeg": "^0.12.15",
