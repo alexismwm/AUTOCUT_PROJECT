@@ -138,7 +138,9 @@ export const PexelsVideoManager: React.FC<PexelsVideoManagerProps> = ({
       }
 
       // Vérifier s'il y a plus de vidéos (si on reçoit moins de 30 vidéos, c'est qu'on est à la fin)
-      setHasMoreVideos(results.length === 30);
+      const hasMore = results.length === 30;
+      setHasMoreVideos(hasMore);
+      console.log(`📊 Loaded ${results.length} videos, hasMore: ${hasMore}`);
       
     } catch (error) {
       console.error('Error searching videos:', error);

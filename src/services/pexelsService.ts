@@ -98,7 +98,7 @@ class PexelsService {
     if (!PEXELS_API_KEY) {
       console.warn('🔑 Pexels API key not found. Using mock data.');
       console.log('💡 To use real Pexels videos, add VITE_PEXELS_API_KEY to your .env file');
-      return this.getMockVideos(params.theme);
+      return this.getMockVideos(params.theme, params.perPage || 15, customKeywords);
     }
 
     if (!this.canMakeRequest()) {
@@ -112,7 +112,8 @@ class PexelsService {
       // Combiner mots-clés du thème avec mots-clés personnalisés
       let allKeywords = this.getThemeKeywords(params.theme);
       if (customKeywords && customKeywords.length > 0) {
-        allKeywords = [...customKeywords, ...allKeywords.slice(0, 2)]; // Priorité aux custom keywords
+        // Priorité aux mots-clés personnalisés, puis ajouter quelques mots-clés du thème
+        allKeywords = [...customKeywords, ...allKeywords.slice(0, 2)];
       }
       
       const searchQuery = allKeywords.join(' ');
@@ -134,6 +135,9 @@ class PexelsService {
       console.log(`🔍 Searching Pexels for: "${searchQuery}"`);
       console.log(`📡 API URL: ${url.toString()}`);
       console.log(`🔑 Using API key: ${PEXELS_API_KEY ? 'Yes' : 'No'}`);
+      console.log(`🎯 Custom keywords:`, customKeywords);
+      console.log(`🎯 Theme keywords:`, this.getThemeKeywords(params.theme));
+      console.log(`🎯 Final keywords:`, allKeywords);
 
       const response = await fetch(url.toString(), {
         headers: this.getHeaders()
@@ -181,7 +185,7 @@ class PexelsService {
       
       console.error('Pexels API error:', error);
       console.log('🔄 Falling back to mock data due to API error');
-      return this.getMockVideos(params.theme);
+      return this.getMockVideos(params.theme, params.perPage || 15, customKeywords);
     }
   }
 
@@ -268,7 +272,7 @@ class PexelsService {
   /**
    * Données de démonstration si pas d'API key
    */
-  private getMockVideos(theme: VideoTheme, limit = 15): VideoAsset[] {
+  private getMockVideos(theme: VideoTheme, limit = 15, customKeywords?: string[]): VideoAsset[] {
     // Generate a proper list of mock authors
     const mockAuthors = [
       'John Smith', 'Emma Wilson', 'Michael Brown', 'Sarah Davis', 'David Miller',
@@ -276,7 +280,7 @@ class PexelsService {
       'William Anderson', 'Patricia Thomas', 'Richard Jackson', 'Linda White', 'Thomas Harris'
     ];
 
-    // Theme-specific video URLs for variety - Using working demo videos with better variety
+    // Theme-specific video URLs for variety - Using working demo videos
     const themeVideos = {
       'Travel': [
         'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
@@ -337,16 +341,23 @@ class PexelsService {
       const videoIndex = i % videos.length;
       const duration = 8 + Math.random() * 22; // 8-30 seconds, more realistic
       
+      // Créer un titre plus intelligent basé sur les mots-clés
+      let title = `${theme} video ${i + 1}`;
+      if (customKeywords && customKeywords.length > 0) {
+        const keyword = customKeywords[0]; // Prendre le premier mot-clé
+        title = `${keyword} ${theme} video ${i + 1}`;
+      }
+      
       return {
         id: `mock-${theme}-${i}-${Date.now()}`, // Add timestamp for uniqueness
-        title: `${theme} video ${i + 1}`,
+        title: title,
         thumbnail: `https://picsum.photos/400/300?random=${theme}${i}${Date.now()}`, // Direct URL for thumbnails
         videoUrl: proxy(videos[videoIndex]),
         duration: Math.round(duration * 10) / 10, // Round to 1 decimal
         width: 1920,
         height: 1080,
         theme,
-        tags: this.getThemeKeywords(theme).slice(0, 3),
+        tags: customKeywords ? [...customKeywords, ...this.getThemeKeywords(theme).slice(0, 2)] : this.getThemeKeywords(theme).slice(0, 3),
         avgColor: '#' + Math.floor(Math.random()*16777215).toString(16),
         author: {
           name: mockAuthors[authorIndex],
