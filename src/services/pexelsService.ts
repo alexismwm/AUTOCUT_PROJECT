@@ -95,6 +95,12 @@ class PexelsService {
    * Recherche de vidéos par thème avec mots-clés personnalisés
    */
   async searchVideosByTheme(params: VideoSearchParams, customKeywords?: string[]): Promise<VideoAsset[]> {
+    console.log('🔑 API Key check:', {
+      hasKey: !!PEXELS_API_KEY,
+      keyLength: PEXELS_API_KEY?.length || 0,
+      keyStart: PEXELS_API_KEY?.substring(0, 10) + '...' || 'none'
+    });
+    
     if (!PEXELS_API_KEY) {
       console.warn('🔑 Pexels API key not found. Using mock data.');
       console.log('💡 To use real Pexels videos, add VITE_PEXELS_API_KEY to your .env file');
