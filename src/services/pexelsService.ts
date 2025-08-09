@@ -102,9 +102,10 @@ class PexelsService {
     });
     
     if (!PEXELS_API_KEY) {
-      console.warn('🔑 Pexels API key not found. Using mock data.');
-      console.log('💡 To use real Pexels videos, add VITE_PEXELS_API_KEY to your .env file');
-      return this.getMockVideos(params.theme, params.perPage || 15, customKeywords);
+      throw new VideoServiceError(
+        'Pexels API key not found. Please add VITE_PEXELS_API_KEY to your .env file',
+        'API_ERROR'
+      );
     }
 
     if (!this.canMakeRequest()) {
@@ -190,8 +191,10 @@ class PexelsService {
       }
       
       console.error('Pexels API error:', error);
-      console.log('🔄 Falling back to mock data due to API error');
-      return this.getMockVideos(params.theme, params.perPage || 15, customKeywords);
+      throw new VideoServiceError(
+        `Failed to fetch videos from Pexels: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'API_ERROR'
+      );
     }
   }
 
@@ -200,7 +203,10 @@ class PexelsService {
    */
   async getPopularVideos(theme: VideoTheme, limit = 20): Promise<VideoAsset[]> {
     if (!PEXELS_API_KEY) {
-      return this.getMockVideos(theme, limit);
+      throw new VideoServiceError(
+        'Pexels API key not found. Please add VITE_PEXELS_API_KEY to your .env file',
+        'API_ERROR'
+      );
     }
 
     if (!this.canMakeRequest()) {
@@ -251,7 +257,10 @@ class PexelsService {
       }
       
       console.error('Popular videos API error:', error);
-      return this.getMockVideos(theme, limit);
+      throw new VideoServiceError(
+        `Failed to fetch popular videos from Pexels: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'API_ERROR'
+      );
     }
   }
 
