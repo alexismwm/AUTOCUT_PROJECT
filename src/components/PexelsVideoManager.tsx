@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { Shuffle, Search, Download, X, RefreshCw, Filter, User } from 'lucide-react';
 import { VideoTheme, VideoAsset } from '../types/video';
 import { pexelsService } from '../services/pexelsService';
@@ -105,19 +105,27 @@ export const PexelsVideoManager: React.FC<PexelsVideoManagerProps> = ({
     setIsLoading(true);
     try {
       const pageToLoad = loadMore ? currentPage + 1 : 1;
+      
+      // Process keywords properly - split by comma and trim
       const keywordArray = keywords.trim() 
         ? keywords.split(',').map(k => k.trim()).filter(k => k.length > 0)
         : [];
+
+      console.log(`🔍 Searching videos for theme "${selectedTheme}" with keywords:`, keywordArray);
 
       const results = await pexelsService.searchVideosByTheme(
         {
           theme: selectedTheme,
           perPage: 30,
           page: pageToLoad,
-          orientation: 'portrait'
+          orientation: 'portrait',
+          minDuration: minDuration,
+          maxDuration: maxDuration
         },
         keywordArray
       );
+
+      console.log(`📹 Found ${results.length} videos for theme "${selectedTheme}"`);
 
       if (loadMore) {
         setSearchResults(prev => [...prev, ...results]);
@@ -136,7 +144,7 @@ export const PexelsVideoManager: React.FC<PexelsVideoManagerProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [selectedTheme, keywords, isLoading, currentPage]);
+  }, [selectedTheme, keywords, isLoading, currentPage, minDuration, maxDuration]);
 
   const loadMoreVideos = useCallback(() => {
     searchVideos(true);
@@ -219,6 +227,23 @@ export const PexelsVideoManager: React.FC<PexelsVideoManagerProps> = ({
       setIsLoading(false);
     }
   }, [videoAssignments, projectFilename]);
+
+  // Auto-search when theme changes
+  useEffect(() => {
+    if (selectedTheme) {
+      console.log(`🎨 Theme changed to "${selectedTheme}", triggering search...`);
+      setCurrentPage(1);
+      setHasMoreVideos(true);
+      searchVideos(false);
+    }
+  }, [selectedTheme, searchVideos]);
+
+  // Auto-search when filters change
+  useEffect(() => {
+    if (searchResults.length > 0) {
+      console.log(`🔍 Filters changed, re-filtering ${searchResults.length} videos...`);
+    }
+  }, [minDuration, maxDuration, selectedAuthor, searchResults.length]);
 
   if (!showManager) {
     return (
@@ -374,6 +399,7 @@ export const PexelsVideoManager: React.FC<PexelsVideoManagerProps> = ({
       <div className="flex items-center space-x-3">
         <button
           onClick={() => {
+            console.log(`🔍 Manual search triggered for theme "${selectedTheme}"`);
             setCurrentPage(1);
             setHasMoreVideos(true);
             searchVideos(false);

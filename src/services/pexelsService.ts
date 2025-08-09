@@ -265,22 +265,34 @@ class PexelsService {
    * Données de démonstration si pas d'API key
    */
   private getMockVideos(theme: VideoTheme, limit = 15): VideoAsset[] {
-    const mockData: VideoAsset[] = Array.from({ length: limit }, (_, i) => ({
-      id: `mock-${theme}-${i}`,
-      title: `${theme} video ${i + 1}`,
-      thumbnail: proxy(`https://picsum.photos/400/300?random=${theme}${i}`),
-      videoUrl: proxy(`https://player.vimeo.com/external/291648067.hd.mp4?s=94998971682c6a3267e4cbd19d16a7b6c720f345&profile_id=175`),
-      duration: 15 + Math.random() * 30,
-      width: 1920,
-      height: 1080,
-      theme,
-      tags: this.getThemeKeywords(theme).slice(0, 3),
-      avgColor: '#' + Math.floor(Math.random()*16777215).toString(16),
-      author: {
-        name: `Mock Author ${i + 1}`,
-        url: '#'
-      }
-    }));
+    // Generate a proper list of mock authors
+    const mockAuthors = [
+      'John Smith', 'Emma Wilson', 'Michael Brown', 'Sarah Davis', 'David Miller',
+      'Lisa Garcia', 'James Johnson', 'Maria Rodriguez', 'Robert Martinez', 'Jennifer Taylor',
+      'William Anderson', 'Patricia Thomas', 'Richard Jackson', 'Linda White', 'Thomas Harris'
+    ];
+
+    const mockData: VideoAsset[] = Array.from({ length: limit }, (_, i) => {
+      const authorIndex = i % mockAuthors.length;
+      const duration = 5 + Math.random() * 25; // 5-30 seconds
+      
+      return {
+        id: `mock-${theme}-${i}`,
+        title: `${theme} video ${i + 1}`,
+        thumbnail: proxy(`https://picsum.photos/400/300?random=${theme}${i}`),
+        videoUrl: proxy(`https://player.vimeo.com/external/291648067.hd.mp4?s=94998971682c6a3267e4cbd19d16a7b6c720f345&profile_id=175`),
+        duration: Math.round(duration * 10) / 10, // Round to 1 decimal
+        width: 1920,
+        height: 1080,
+        theme,
+        tags: this.getThemeKeywords(theme).slice(0, 3),
+        avgColor: '#' + Math.floor(Math.random()*16777215).toString(16),
+        author: {
+          name: mockAuthors[authorIndex],
+          url: '#'
+        }
+      };
+    });
 
     console.log(`🎭 Using mock data: ${mockData.length} videos for theme "${theme}"`);
     return mockData;
