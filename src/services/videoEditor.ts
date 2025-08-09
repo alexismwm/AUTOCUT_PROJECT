@@ -136,10 +136,23 @@ export class VideoEditor {
     const segments: VideoSegment[] = [];
     const sortedCuts = [...cutMarkers].sort((a, b) => a.time - b.time);
 
+    console.log('🔧 Creating video segments:', {
+      cutMarkers: cutMarkers.length,
+      videoAssignments: videoAssignments.size,
+      startTime,
+      endTime,
+      videoTrims: videoTrims.size
+    });
+
     // Premier segment (Plan 1)
     const firstCutTime = sortedCuts.length > 0 ? sortedCuts[0].time : endTime;
     const plan1Video = videoAssignments.get(1);
     if (plan1Video) {
+      // Validate video duration
+      if (isNaN(plan1Video.duration) || plan1Video.duration <= 0) {
+        console.warn(`⚠️ Invalid duration for video ${plan1Video.id}: ${plan1Video.duration}`);
+      }
+      
       segments.push({
         planIndex: 1,
         video: plan1Video,
@@ -157,6 +170,11 @@ export class VideoEditor {
       const planVideo = videoAssignments.get(planIndex);
 
       if (planVideo && cut.time < endTime) {
+        // Validate video duration
+        if (isNaN(planVideo.duration) || planVideo.duration <= 0) {
+          console.warn(`⚠️ Invalid duration for video ${planVideo.id}: ${planVideo.duration}`);
+        }
+        
         segments.push({
           planIndex,
           video: planVideo,
@@ -167,7 +185,14 @@ export class VideoEditor {
       }
     }
 
-    return segments.filter(segment => segment.endTime > segment.startTime);
+    console.log(`✅ Created ${segments.length} segments:`, segments.map(s => ({
+      plan: s.planIndex,
+      video: s.video.title,
+      duration: s.endTime - s.startTime,
+      trim: s.trimSettings ? `${s.trimSettings.startTime}-${s.trimSettings.endTime}` : 'none'
+    })));
+
+    return segments;
   }
 
   /**
@@ -283,6 +308,24 @@ export class VideoEditor {
     onProgress?: (progress: ExportProgress) => void
   ): Promise<FinalVideoExport> {
     try {
+      console.log('🎬 Starting video export...');
+      console.log('📊 Export config:', {
+        cutMarkers: cutMarkers.length,
+        videoAssignments: videoAssignments.size,
+        audioDuration: audioEndTime - audioStartTime,
+        compression,
+        videoTrims: videoTrims.size
+      });
+
+      // Validate inputs
+      if (videoAssignments.size === 0) {
+        throw new Error('No videos assigned to plans');
+      }
+
+      if (audioEndTime <= audioStartTime) {
+        throw new Error('Invalid audio duration (end time must be greater than start time)');
+      }
+
       // Initialiser FFmpeg
       await this.initialize(onProgress);
 
@@ -298,6 +341,8 @@ export class VideoEditor {
       if (segments.length === 0) {
         throw new Error('No video segments to export');
       }
+
+      console.log(`📹 Created ${segments.length} video segments`);
 
       onProgress?.({
         stage: 'processing',
@@ -320,11 +365,15 @@ export class VideoEditor {
 
       // Générer et exécuter la commande FFmpeg
       const ffmpegCommand = this.generateFFmpegCommand(segments, audioFile, config, compression);
+      console.log('🔧 FFmpeg command:', ffmpegCommand.join(' '));
+      
       await this.ffmpeg.exec(ffmpegCommand);
 
       // Récupérer la vidéo finale
       const videoData = await this.ffmpeg.readFile(`output_${compression}.mp4`);
       const videoBlob = new Blob([videoData], { type: 'video/mp4' });
+
+      console.log(`✅ Video export completed: ${videoBlob.size} bytes`);
 
       onProgress?.({
         stage: 'thumbnails',
@@ -369,8 +418,23 @@ export class VideoEditor {
       };
 
     } catch (error) {
-      console.error('Video export failed:', error);
-      throw new Error(`Video export failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error('❌ Video export failed:', error);
+      
+      // Provide more specific error messages
+      let errorMessage = 'Unknown error';
+      if (error instanceof Error) {
+        if (error.message.includes('Failed to load FFmpeg')) {
+          errorMessage = 'FFmpeg not available. Please check your internet connection and try again.';
+        } else if (error.message.includes('No video segments')) {
+          errorMessage = 'No videos assigned to plans. Please assign videos before exporting.';
+        } else if (error.message.includes('Invalid audio duration')) {
+          errorMessage = 'Invalid audio trim points. Please check your IN/OUT points.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      throw new Error(`Video export failed: ${errorMessage}`);
     }
   }
 

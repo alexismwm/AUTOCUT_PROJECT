@@ -272,15 +272,72 @@ class PexelsService {
       'William Anderson', 'Patricia Thomas', 'Richard Jackson', 'Linda White', 'Thomas Harris'
     ];
 
+    // Theme-specific video URLs for variety
+    const themeVideos = {
+      'Travel': [
+        'https://player.vimeo.com/external/291648067.hd.mp4?s=94998971682c6a3267e4cbd19d16a7b6c720f345&profile_id=175',
+        'https://player.vimeo.com/external/328328847.hd.mp4?s=c44e19f5a3d15f067c02d8c03c459c1e6a2e7f8a&profile_id=175',
+        'https://player.vimeo.com/external/434045526.hd.mp4?s=c27eecc69a27dbc4ff2b87d38afc35f1a9e7c02d&profile_id=175'
+      ],
+      'Lifestyle': [
+        'https://player.vimeo.com/external/434045526.hd.mp4?s=c27eecc69a27dbc4ff2b87d38afc35f1a9e7c02d&profile_id=175',
+        'https://player.vimeo.com/external/328328847.hd.mp4?s=c44e19f5a3d15f067c02d8c03c459c1e6a2e7f8a&profile_id=175',
+        'https://player.vimeo.com/external/291648067.hd.mp4?s=94998971682c6a3267e4cbd19d16a7b6c720f345&profile_id=175'
+      ],
+      'Fashion': [
+        'https://player.vimeo.com/external/328328847.hd.mp4?s=c44e19f5a3d15f067c02d8c03c459c1e6a2e7f8a&profile_id=175',
+        'https://player.vimeo.com/external/434045526.hd.mp4?s=c27eecc69a27dbc4ff2b87d38afc35f1a9e7c02d&profile_id=175',
+        'https://player.vimeo.com/external/291648067.hd.mp4?s=94998971682c6a3267e4cbd19d16a7b6c720f345&profile_id=175'
+      ],
+      'Retro': [
+        'https://player.vimeo.com/external/434045526.hd.mp4?s=c27eecc69a27dbc4ff2b87d38afc35f1a9e7c02d&profile_id=175',
+        'https://player.vimeo.com/external/291648067.hd.mp4?s=94998971682c6a3267e4cbd19d16a7b6c720f345&profile_id=175',
+        'https://player.vimeo.com/external/328328847.hd.mp4?s=c44e19f5a3d15f067c02d8c03c459c1e6a2e7f8a&profile_id=175'
+      ],
+      'Party': [
+        'https://player.vimeo.com/external/291648067.hd.mp4?s=94998971682c6a3267e4cbd19d16a7b6c720f345&profile_id=175',
+        'https://player.vimeo.com/external/434045526.hd.mp4?s=c27eecc69a27dbc4ff2b87d38afc35f1a9e7c02d&profile_id=175',
+        'https://player.vimeo.com/external/328328847.hd.mp4?s=c44e19f5a3d15f067c02d8c03c459c1e6a2e7f8a&profile_id=175'
+      ],
+      'Sport': [
+        'https://player.vimeo.com/external/328328847.hd.mp4?s=c44e19f5a3d15f067c02d8c03c459c1e6a2e7f8a&profile_id=175',
+        'https://player.vimeo.com/external/291648067.hd.mp4?s=94998971682c6a3267e4cbd19d16a7b6c720f345&profile_id=175',
+        'https://player.vimeo.com/external/434045526.hd.mp4?s=c27eecc69a27dbc4ff2b87d38afc35f1a9e7c02d&profile_id=175'
+      ],
+      'Games': [
+        'https://player.vimeo.com/external/434045526.hd.mp4?s=c27eecc69a27dbc4ff2b87d38afc35f1a9e7c02d&profile_id=175',
+        'https://player.vimeo.com/external/328328847.hd.mp4?s=c44e19f5a3d15f067c02d8c03c459c1e6a2e7f8a&profile_id=175',
+        'https://player.vimeo.com/external/291648067.hd.mp4?s=94998971682c6a3267e4cbd19d16a7b6c720f345&profile_id=175'
+      ],
+      'Food': [
+        'https://player.vimeo.com/external/291648067.hd.mp4?s=94998971682c6a3267e4cbd19d16a7b6c720f345&profile_id=175',
+        'https://player.vimeo.com/external/434045526.hd.mp4?s=c27eecc69a27dbc4ff2b87d38afc35f1a9e7c02d&profile_id=175',
+        'https://player.vimeo.com/external/328328847.hd.mp4?s=c44e19f5a3d15f067c02d8c03c459c1e6a2e7f8a&profile_id=175'
+      ],
+      'Vlog': [
+        'https://player.vimeo.com/external/328328847.hd.mp4?s=c44e19f5a3d15f067c02d8c03c459c1e6a2e7f8a&profile_id=175',
+        'https://player.vimeo.com/external/291648067.hd.mp4?s=94998971682c6a3267e4cbd19d16a7b6c720f345&profile_id=175',
+        'https://player.vimeo.com/external/434045526.hd.mp4?s=c27eecc69a27dbc4ff2b87d38afc35f1a9e7c02d&profile_id=175'
+      ],
+      'social': [
+        'https://player.vimeo.com/external/434045526.hd.mp4?s=c27eecc69a27dbc4ff2b87d38afc35f1a9e7c02d&profile_id=175',
+        'https://player.vimeo.com/external/291648067.hd.mp4?s=94998971682c6a3267e4cbd19d16a7b6c720f345&profile_id=175',
+        'https://player.vimeo.com/external/328328847.hd.mp4?s=c44e19f5a3d15f067c02d8c03c459c1e6a2e7f8a&profile_id=175'
+      ]
+    };
+
+    const videos = themeVideos[theme] || themeVideos['Travel'];
+
     const mockData: VideoAsset[] = Array.from({ length: limit }, (_, i) => {
       const authorIndex = i % mockAuthors.length;
-      const duration = 5 + Math.random() * 25; // 5-30 seconds
+      const videoIndex = i % videos.length;
+      const duration = 8 + Math.random() * 22; // 8-30 seconds, more realistic
       
       return {
-        id: `mock-${theme}-${i}`,
+        id: `mock-${theme}-${i}-${Date.now()}`, // Add timestamp for uniqueness
         title: `${theme} video ${i + 1}`,
-        thumbnail: proxy(`https://picsum.photos/400/300?random=${theme}${i}`),
-        videoUrl: proxy(`https://player.vimeo.com/external/291648067.hd.mp4?s=94998971682c6a3267e4cbd19d16a7b6c720f345&profile_id=175`),
+        thumbnail: proxy(`https://picsum.photos/400/300?random=${theme}${i}${Date.now()}`), // Add timestamp for variety
+        videoUrl: proxy(videos[videoIndex]),
         duration: Math.round(duration * 10) / 10, // Round to 1 decimal
         width: 1920,
         height: 1080,

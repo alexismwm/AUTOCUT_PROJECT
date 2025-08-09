@@ -40,14 +40,30 @@ export const VideoTrimmer: React.FC<VideoTrimmerProps> = ({
     if (!videoElement) return;
 
     const handleLoadedMetadata = () => {
+      console.log(`🎬 Video loaded: duration=${videoElement.duration}, planDuration=${planDuration}`);
+      
+      // Validate video duration
+      if (isNaN(videoElement.duration) || videoElement.duration <= 0) {
+        console.error('❌ Invalid video duration:', videoElement.duration);
+        alert('Erreur: Impossible de charger la durée de la vidéo. Vérifiez que la vidéo est accessible.');
+        onClose();
+        return;
+      }
+
       setIsVideoLoaded(true);
+      
       // Initialize zone at the beginning, but ensure it doesn't exceed video duration
       const maxZoneStart = Math.max(0, videoElement.duration - fixedZoneDuration);
-      setZoneStartTime(Math.min(0, maxZoneStart));
+      const initialZoneStart = Math.min(0, maxZoneStart);
+      setZoneStartTime(initialZoneStart);
+      
+      console.log(`✅ Zone initialized: start=${initialZoneStart.toFixed(1)}s, end=${(initialZoneStart + fixedZoneDuration).toFixed(1)}s`);
     };
 
     const handleTimeUpdate = () => {
-      setCurrentTime(videoElement.currentTime);
+      if (!isNaN(videoElement.currentTime)) {
+        setCurrentTime(videoElement.currentTime);
+      }
     };
 
     const handleEnded = () => {
@@ -58,16 +74,27 @@ export const VideoTrimmer: React.FC<VideoTrimmerProps> = ({
       }
     };
 
+    const handleError = (error: Event) => {
+      console.error('❌ Video loading error:', error);
+      alert('Erreur: Impossible de charger la vidéo. Vérifiez votre connexion internet.');
+      onClose();
+    };
+
     videoElement.addEventListener('loadedmetadata', handleLoadedMetadata);
     videoElement.addEventListener('timeupdate', handleTimeUpdate);
     videoElement.addEventListener('ended', handleEnded);
+    videoElement.addEventListener('error', handleError);
+
+    // Load the video
+    videoElement.load();
 
     return () => {
       videoElement.removeEventListener('loadedmetadata', handleLoadedMetadata);
       videoElement.removeEventListener('timeupdate', handleTimeUpdate);
       videoElement.removeEventListener('ended', handleEnded);
+      videoElement.removeEventListener('error', handleError);
     };
-  }, [audioDuration, endTime, startTime]);
+  }, [audioDuration, endTime, startTime, onClose]);
 
   // Control video playback within trim bounds
   useEffect(() => {
@@ -175,6 +202,9 @@ export const VideoTrimmer: React.FC<VideoTrimmerProps> = ({
   }, [planIndex, startTime, endTime, onTrimChange, onClose]);
 
   const formatTime = (time: number) => {
+    if (isNaN(time) || time < 0) {
+      return '0:00.00';
+    }
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time % 60);
     const milliseconds = Math.floor((time % 1) * 100);
@@ -182,16 +212,16 @@ export const VideoTrimmer: React.FC<VideoTrimmerProps> = ({
   };
 
   const trimmedDuration = endTime - startTime;
-  const videoProgress = isVideoLoaded && videoRef.current 
+  const videoProgress = isVideoLoaded && videoRef.current && !isNaN(videoRef.current.duration)
     ? (currentTime / videoRef.current.duration) * 100 
     : 0;
-  const startPercent = isVideoLoaded && videoRef.current 
+  const startPercent = isVideoLoaded && videoRef.current && !isNaN(videoRef.current.duration)
     ? (startTime / videoRef.current.duration) * 100 
     : 0;
-  const endPercent = isVideoLoaded && videoRef.current 
+  const endPercent = isVideoLoaded && videoRef.current && !isNaN(videoRef.current.duration)
     ? (endTime / videoRef.current.duration) * 100 
     : 100;
-  const zoneWidthPercent = isVideoLoaded && videoRef.current 
+  const zoneWidthPercent = isVideoLoaded && videoRef.current && !isNaN(videoRef.current.duration)
     ? (fixedZoneDuration / videoRef.current.duration) * 100 
     : 10;
 
