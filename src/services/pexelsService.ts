@@ -124,18 +124,7 @@ class PexelsService {
       }
       
       const searchQuery = allKeywords.join(' ');
-      
-      // Utiliser le proxy en production pour éviter les problèmes CORS
-      const isProduction = window.location.hostname !== 'localhost';
-      const baseUrl = isProduction ? '/api/fetch' : `${PEXELS_API_URL}/search`;
-      
-      const url = new URL(baseUrl);
-      
-      if (isProduction) {
-        // Proxy mode
-        url.searchParams.set('url', `${PEXELS_API_URL}/search`);
-        url.searchParams.set('apiKey', PEXELS_API_KEY);
-      }
+      const url = new URL(`${PEXELS_API_URL}/search`);
       
       // Paramètres de recherche
       url.searchParams.set('query', searchQuery);
@@ -158,10 +147,10 @@ class PexelsService {
       console.log(`🎯 Final keywords:`, allKeywords);
 
       console.log(`🌐 Making API request to: ${url.toString()}`);
-      console.log(`🔑 Production mode: ${isProduction}`);
+      console.log(`🔑 Headers:`, this.getHeaders());
       
       const response = await fetch(url.toString(), {
-        headers: isProduction ? {} : this.getHeaders()
+        headers: this.getHeaders()
       });
 
       this.requestCount++;
