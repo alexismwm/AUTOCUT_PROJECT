@@ -1,0 +1,53 @@
+[build]
+  # Commande de build
+  command = "npm run build"
+  
+  # Dossier de sortie
+  publish = "dist"
+  
+  # Variables d'environnement pour le build
+  environment = { NODE_VERSION = "18" }
+
+[build.processing]
+  # Optimisations automatiques
+  skip_processing = false
+
+[build.processing.css]
+  # Minification CSS
+  bundle = true
+  minify = true
+
+[build.processing.js]
+  # Minification JS
+  bundle = true
+  minify = true
+
+[build.processing.html]
+  # Minification HTML
+  pretty_urls = true
+
+[build.processing.images]
+  # Optimisation des images
+  compress = true
+
+# Redirections pour SPA (Single Page Application)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Headers de sécurité et performance
+# Headers CORS pour FFmpeg.js 
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Cross-Origin-Opener-Policy = "same-origin"
+    Cross-Origin-Embedder-Policy = "require-corp"
+
+# Configuration des fonctions (si nécessaire plus tard)
+[functions]
+  directory = "netlify/functions"
+
+# Configuration des formes (si nécessaire plus tard)
+[template.environment]
+  NODE_VERSION = "18" 
